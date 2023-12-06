@@ -4,18 +4,22 @@ from sqlalchemy import text
 list_status = ['', 'Tersedia', 'Dipinjam']
 list_genre = ['', 'Romantis', 'Anak-anak', 'Horor', 'Sci-Fi', 'Aksi', 'Misteri', 'Pengembangan Diri']
 
+# Koneksi ke PostgreSQL
 conn = st.connection("postgresql", type="sql", 
                      url="postgresql://nadia.2043221105:P4YglWGXSp3e@ep-muddy-rice-61227326.us-east-2.aws.neon.tech/web")
-with conn.session as session:
-    query = text('CREATE TABLE IF NOT EXISTS buku (id serial, "Kode Buku" VARCHAR, "Judul Buku" VARCHAR(255), "Genre" VARCHAR(255), "Tahun Terbit" TEXT, "Pengarang" VARCHAR(255), "Penerbit" VARCHAR(255), "Kode Rak" VARCHAR(5), "Status" VARCHAR(255));')
-    session.execute(query)
 
-st.header('DATABASE BUKU PERPUSTAKAAN 📖')
-page = st.sidebar.selectbox("Pilih Menu", ["View Data","Edit Data","Visualisasi Data"])
+# Fungsi untuk mendapatkan data buku berdasarkan filter
+def get_filtered_books(genre, status):
+    query = text('SELECT * FROM buku WHERE ("Genre" = :genre OR :genre IS NULL) AND ("Status" = :status OR :status IS NULL);')
+    result = conn.execute(query, {'genre': genre, 'status': status}).fetchall()
+    return result
+
+st.header('DATABASE BUKU PERPUSTAKAAN📖')
+page = st.sidebar.selectbox("Pilih Menu", ["View Data", "Edit Data", "Visualisasi Data", "Filter Data"])
 
 if page == "View Data":
-  data = conn.query('SELECT * FROM buku ORDER BY id;', ttl="0").set_index('id')
-  st.dataframe(data)
+    data = conn.query('SELECT * FROM buku ORDER BY id;', ttl="0").set_index('id')
+    st.dataframe(data)
 
 if page == "Edit Data":
     if st.button('Tambah Data'):
